@@ -36,11 +36,11 @@ object RecFun extends RecFunInterface:
   /**
    * Exercise 3
    */
-  // In each particular case the first coin is either part of the solution or it isn't
-  // if it is part of the solution, we use it and keep it to use on the smaller amount
-  // if it is not, we remove it from the set of possible coins and consider the money
+  // In each particular case the first coin is either part of the solution or it isn't.
+  // If it is part of the solution, we use it and keep it to use on the smaller amount.
+  // If it is not, we remove it from the set of possible coins and consider the money
   // against the remaining set.
-  // Continue until we hit our base cases (money is 0 or negative, or we have no more coins)
+  // Continue until we hit our base cases (money <= 0, or we have no more coins)
   def countChange(money: Int, coins: List[Int]): Int = {
     if(money == 0) 1
     else if(money < 0) 0
