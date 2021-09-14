@@ -19,7 +19,7 @@ abstract class Nat {
 object Zero extends Nat {
   def isZero: Boolean = true
   def predecessor: Nat = Zero
-  def successor: Nat = Succ(Zero)
+  def successor: Nat = Succ(this)
   def +(that: Nat): Nat = that
   def -(that: Nat): Nat = Zero
   def toInt: Int = 0
@@ -29,23 +29,12 @@ case class Succ(val n: Nat) extends Nat {
   def isZero: Boolean = false
   def predecessor: Nat = n
   def successor: Nat = Succ(this)
-  def +(that: Nat): Nat = {
-    def loop(countUp: Nat, countDown: Nat): Nat = {
-      if (countDown == Zero) countUp
-      else loop(countUp.successor, countDown.predecessor)
-    }
-    loop(this, that)
-  }
-  def -(that: Nat): Nat = {
-    def loop(o1: Nat, o2: Nat): Nat = {
-      if (o2 == Zero) o1
-      else loop(o1.predecessor, o2.predecessor)
-    }
-    loop(this, that)
-  }
+  def +(that: Nat): Nat = Succ(n + that)
+  def -(that: Nat): Nat =
+    if (that.isZero) this else n - that.predecessor
   def toInt(): Int = {
     def loop(n: Nat, count: Int): Int = {
-      if (n == Zero) count
+      if (n.isZero) count
       else loop(n.predecessor, count + 1)
     }
     loop(this, 0)
