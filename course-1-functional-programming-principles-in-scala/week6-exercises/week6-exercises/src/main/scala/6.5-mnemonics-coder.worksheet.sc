@@ -68,7 +68,7 @@ class Coder(words: List[String]) {
   //   } yield List(word) ++ ending
   // }
   def encode(number: String): Set[List[String]] = {
-    if (number.isEmpty) then Set(Nil)
+    if (number.isEmpty) Set(Nil)
     else {
       for {
         splitPoint <- (1 to number.length).toSet

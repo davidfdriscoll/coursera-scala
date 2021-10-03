@@ -35,10 +35,17 @@ object Anagrams extends AnagramsInterface:
    *
    *  Note: you must use `groupBy` to implement this method!
    */
-  def wordOccurrences(w: Word): Occurrences = ???
+  def wordOccurrences(w: Word): Occurrences =
+    w
+      .toLowerCase
+      .groupBy((c: Char) => c)
+      .map((c, cc) => (c, cc.length))
+      .toList
+      .sortWith((a,b) => a._1 < b._1)
 
   /** Converts a sentence into its character occurrence list. */
-  def sentenceOccurrences(s: Sentence): Occurrences = ???
+  def sentenceOccurrences(s: Sentence): Occurrences =
+    wordOccurrences(s.foldLeft("")(_ + _))
 
   /** The `dictionaryByOccurrences` is a `Map` from different occurrences to a sequence of all
    *  the words that have that occurrence count.
@@ -55,10 +62,12 @@ object Anagrams extends AnagramsInterface:
    *    List(('a', 1), ('e', 1), ('t', 1)) -> Seq("ate", "eat", "tea")
    *
    */
-  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = ???
+  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = 
+    dictionary.groupBy(wordOccurrences).withDefaultValue(List())
 
-  /** Returns all the anagrams of a given word. */
-  def wordAnagrams(word: Word): List[Word] = ???
+  /** Returns all the anagrams of a given word, including the word itself. */
+  def wordAnagrams(word: Word): List[Word] = 
+    dictionaryByOccurrences(wordOccurrences(word))
 
   /** Returns the list of all subsets of the occurrence list.
    *  This includes the occurrence itself, i.e. `List(('k', 1), ('o', 1))`
@@ -82,7 +91,21 @@ object Anagrams extends AnagramsInterface:
    *  Note that the order of the occurrence list subsets does not matter -- the subsets
    *  in the example above could have been displayed in some other order.
    */
-  def combinations(occurrences: Occurrences): List[Occurrences] = ???
+
+  def combinations(occurrences: Occurrences): List[Occurrences] = {
+    occurrences match {
+      case Nil => List(Nil)
+      case head :: tail => {
+        val tails = combinations(tail)
+        val heads = 
+          for {
+            headVals <- 1 to head._2
+            tails <- tails
+          } yield (head._1, headVals) :: tails
+        tails ++ heads
+      }
+    }
+  }
 
   /** Subtracts occurrence list `y` from occurrence list `x`.
    *
@@ -94,7 +117,25 @@ object Anagrams extends AnagramsInterface:
    *  Note: the resulting value is an occurrence - meaning it is sorted
    *  and has no zero-entries.
    */
-  def subtract(x: Occurrences, y: Occurrences): Occurrences = ???
+  def subtract(x: Occurrences, y: Occurrences): Occurrences = {
+    // If we are done with x, return Nil
+    if(x.isEmpty) Nil
+    // If y is empty, advance through remainder of x
+    // if the x and y heads are not aligned, also advance x one
+    else if(y.isEmpty || x.head._1 != y.head._1) 
+      x.head :: subtract(x.tail, y)
+    // Otherwise obtain the new count from the head of x minus the head of y
+    // If that count is 0, attach it to the recursed remaining tails
+    // Otherwise return the recursed remaining tails
+    else {
+      val tails = subtract(x.tail, y.tail)
+      val freq = x.head._2 - y.head._2
+      if(freq > 0) 
+        (x.head._1, freq) :: tails
+      else 
+        tails
+    }
+  }
 
   /** Returns a list of all anagram sentences of the given sentence.
    *
@@ -136,7 +177,20 @@ object Anagrams extends AnagramsInterface:
    *
    *  Note: There is only one anagram of an empty sentence.
    */
-  def sentenceAnagrams(sentence: Sentence): List[Sentence] = ???
+  def sentenceAnagrams(sentence: Sentence): List[Sentence] = {
+    def occurrenceAnagrams(occurrences: Occurrences): List[Sentence] = {
+      if(occurrences.isEmpty) List(Nil)
+      else {
+        for {
+          occurrence <- combinations(occurrences)
+          words <- dictionaryByOccurrences(occurrence)
+          ends <- occurrenceAnagrams(subtract(occurrences, occurrence))
+        } yield (words :: ends)
+      }
+    }
+
+    occurrenceAnagrams(sentenceOccurrences(sentence))
+  }
 
 object Dictionary:
   def loadDictionary: List[String] =
